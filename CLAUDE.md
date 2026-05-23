@@ -53,22 +53,32 @@
 - `src/server.ts`：Fastify 服务启动入口
 - `src/routes/chat.ts`：`POST /chat` 路由与请求校验
 - `src/lib/runAgent.ts`：最小 Agent 调度逻辑
+- `src/lib/historyStore.ts`：按 `sessionId` 读写本地 JSON history 的最小状态模块
 - `src/cli.ts`：命令行入口
 - `src/tools/readLocalNote.ts`：读取本地笔记工具
 - `src/tools/summarizeText.ts`：文本摘要工具
+- `src/tools/countWords.ts`：词数统计 toy tool / metadata 练习
 - `src/types.ts`：共享类型定义
 
 ### 4. 当前测试覆盖
 - `test/runAgent.test.ts`
 - `test/chatRoute.test.ts`
 - `test/cli.test.ts`
+- `test/historyStore.test.ts`
 
 已覆盖行为：
 - summarize 工具路径
 - read note 缺少路径时的提示
 - fallback 响应带历史上下文
+- word count metadata 路径
 - `/chat` 非法请求返回 400
 - `/chat` 正常请求返回工具结果
+- `/chat` 空 message 返回 400
+- `/chat` 使用 `sessionId` 时会复用已保存的历史
+- `/chat` 非法 `sessionId` 返回 400
+- historyStore 对未知 session 返回空数组
+- historyStore append 后可 load
+- historyStore 多 session 互相隔离
 - CLI 参数拼接与空参数报错
 
 ### 5. 已完成验证
@@ -124,8 +134,13 @@
 - 用 Claude Code 做 review
 
 ### 第二阶段：补最小状态能力
-推荐优先做：
+已完成最小实现：
 - 多会话 history 持久化（按 `sessionId` 保存）
+- 默认本地文件：`agent-playground-ts/data/chat-history.json`
+- 存储结构：`Record<string, ChatMessage[]>`
+- `runAgent` 不直接感知 `sessionId`，仍只接收 `message` 和 `history`
+
+当前 Week 02 的重点应转为：读懂实现、手动联调、补一个小改动，而不是继续扩功能。
 
 ### 第三阶段：补更像产品的能力
 后续可选：
@@ -156,6 +171,18 @@
 - 类型检查：`npm run check`
 - 启动服务：`npm run dev`
 - 跑 CLI：`npm run cli -- summarize "hello world"`
+
+Week 02 session history 手动联调：
+
+```bash
+curl -s -X POST "http://127.0.0.1:3000/chat" \
+  -H "content-type: application/json" \
+  -d '{"sessionId":"demo","message":"hello"}'
+
+curl -s -X POST "http://127.0.0.1:3000/chat" \
+  -H "content-type: application/json" \
+  -d '{"sessionId":"demo","message":"what happened before"}'
+```
 
 ---
 

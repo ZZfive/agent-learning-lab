@@ -1,6 +1,7 @@
 import type { FastifyInstance } from 'fastify'; //只导入类型，不执行代码
 import { z } from 'zod'; //导入zod库，用于数据验证
 
+import { createHistoryStore, type HistoryStore } from '../lib/historyStore.js';
 import { runAgent } from '../lib/runAgent.js';
 
 const chatMessageSchema = z.object({
@@ -11,9 +12,13 @@ const chatMessageSchema = z.object({
 const chatRequestSchema = z.object({
   message: z.string(), //定义message的类型
   history: z.array(chatMessageSchema).optional(), //定义history的类型
+  sessionId: z.string().regex(/^[A-Za-z0-9_-]+$/).optional(), //定义sessionId的类型
 });
 
-export async function registerChatRoute(app: FastifyInstance): Promise<void> {
+export async function registerChatRoute(
+  app: FastifyInstance,
+  historyStore: HistoryStore = createHistoryStore()
+): Promise<void> {
   app.post('/chat', async (request, reply) => {
     const parsed = chatRequestSchema.safeParse(request.body); //验证请求体是否符合schema
 
@@ -30,7 +35,19 @@ export async function registerChatRoute(app: FastifyInstance): Promise<void> {
       });
     }
 
-    const result = await runAgent(parsed.data.message, parsed.data.history ?? []); //调用runAgent函数
+    const history = parsed.data.sessionId
+      ? await historyStore.loadHistory(parsed.data.sessionId)
+      : parsed.data.history ?? [];
+
+    const result = await runAgent(parsed.data.message, history); //调用runAgent函数
+
+    if (parsed.data.sessionId) {
+      await historyStore.appendHistory(parsed.data.sessionId, [
+        { role: 'user', content: parsed.data.message },
+        { role: 'assistant', content: result.message },
+      ]);
+    }
+
     return reply.send(result); //返回结果
   });
 }

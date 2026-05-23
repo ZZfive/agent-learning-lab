@@ -19,4 +19,5 @@ export interface AgentResponse {
 export interface ChatRequestBody {
   message: string;
   history?: ChatMessage[];
+  sessionId?: string;
 }
