@@ -5,9 +5,15 @@ export interface ChatMessage {
   content: string;
 }
 
+export interface AgentMetadata {
+  inputWordCount?: number;
+  outputWordCount?: number;
+}
+
 export interface AgentResponse {
   message: string;
   toolLogs: string[];
+  metadata?: AgentMetadata;
 }
 
 export interface ChatRequestBody {

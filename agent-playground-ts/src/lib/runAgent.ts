@@ -1,6 +1,7 @@
 import { readLocalNote } from '../tools/readLocalNote.js';
 import { summarizeText } from '../tools/summarizeText.js';
-import type { AgentResponse, ChatMessage } from '../types.js';
+import { countWords } from '../tools/countWords.js';
+import type { AgentMetadata, AgentResponse, ChatMessage } from '../types.js';
 
 function extractQuotedText(message: string): string | null {
   const match = message.match(/"([^"]+)"/); // 匹配引号包裹的文本，返回捕获组中的文本，如果没有匹配到，则返回 null
@@ -12,45 +13,65 @@ function extractNotePath(message: string): string | null {
   return match?.[1] ?? null;
 }
 
-export async function runAgent(message: string, history: ChatMessage[] = []): Promise<AgentResponse> {
-  const toolLogs: string[] = []; //初始化为空数组
+export async function runAgent(
+  message: string,
+  history: ChatMessage[] = [],
+  withWordCount: boolean = false
+): Promise<AgentResponse> {
+  const toolLogs: string[] = [];
   const normalizedMessage = message.trim();
 
-  if (/summarize/i.test(normalizedMessage)) { // 如果消息包含 summarize，则调用 summarizeText 工具，忽略大小写，走摘要工具路径
-    const quotedText = extractQuotedText(normalizedMessage) ?? normalizedMessage; // 提取引号包裹的文本，如果没有匹配到，则使用原始消息
-    const summary = summarizeText(quotedText); // 调用 summarizeText 工具，返回摘要
-    toolLogs.push('summarizeText'); // 将摘要工具日志添加到工具日志数组中
+  function buildMetadata(inputText: string, outputText: string): AgentMetadata | undefined {
+    if (!withWordCount) {
+      return undefined;
+    }
 
     return {
-      message: `Summary: ${summary}`,
-      toolLogs,
+      inputWordCount: countWords(inputText),
+      outputWordCount: countWords(outputText),
     };
   }
 
-  if (/read note/i.test(normalizedMessage)) { // 如果消息包含 read note，则调用 readLocalNote 工具，忽略大小写，走读取本地笔记工具路径
-    const notePath = extractNotePath(normalizedMessage); // 提取笔记路径
+  if (/summarize/i.test(normalizedMessage)) {
+    const quotedText = extractQuotedText(normalizedMessage) ?? normalizedMessage;
+    const summary = summarizeText(quotedText);
+    toolLogs.push('summarizeText');
+    const outputMessage = `Summary: ${summary}`;
+    return {
+      message: outputMessage,
+      toolLogs,
+      metadata: buildMetadata(quotedText, outputMessage),
+    };
+  }
 
-    if (!notePath) { // 如果笔记路径为空，则返回错误信息
+  if (/read note/i.test(normalizedMessage)) {
+    const notePath = extractNotePath(normalizedMessage);
+    if (!notePath) {
+      const errorMessage = 'Please provide a note path like: read note note:/absolute/path.txt';
       return {
-        message: 'Please provide a note path like: read note note:/absolute/path.txt',
+        message: errorMessage,
         toolLogs,
+        metadata: buildMetadata(normalizedMessage, errorMessage),
       };
     }
 
-    const content = await readLocalNote(notePath); // 读取本地笔记内容
-    toolLogs.push('readLocalNote'); // 将读取本地笔记工具日志添加到工具日志数组中
-
+    const content = await readLocalNote(notePath);
+    toolLogs.push('readLocalNote');
+    const outputMessage = `Note content: ${content}`;
     return {
-      message: `Note content: ${content}`,
+      message: outputMessage,
       toolLogs,
+      metadata: buildMetadata(normalizedMessage, outputMessage),
     };
   }
 
-  const lastAssistantMessage = [...history].reverse().find((item) => item.role === 'assistant'); // 获取最后一个助理消息
-  const contextSuffix = lastAssistantMessage ? ` Previous assistant reply: ${lastAssistantMessage.content}` : ''; // 如果最后一个助理消息不为空，则添加助理消息前缀
+  const lastAssistantMessage = [...history].reverse().find((item) => item.role === 'assistant');
+  const contextSuffix = lastAssistantMessage ? ` Previous assistant reply: ${lastAssistantMessage.content}` : '';
+  const fallbackMessage = `You said: ${normalizedMessage}.${contextSuffix}`;
 
   return {
-    message: `You said: ${normalizedMessage}.${contextSuffix}`, // 返回消息，包含原始消息和助理消息前缀
+    message: fallbackMessage,
     toolLogs,
+    metadata: buildMetadata(normalizedMessage, fallbackMessage),
   };
 }

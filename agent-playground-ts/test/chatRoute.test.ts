@@ -38,6 +38,7 @@ test('returns agent response for valid chat payloads', async () => {
   const body = response.json();
   assert.match(body.message, /^Summary:/);
   assert.deepEqual(body.toolLogs, ['summarizeText']);
+  assert.equal(body.metadata, undefined);
 
   await app.close();
 });
