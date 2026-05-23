@@ -9,7 +9,7 @@ const chatMessageSchema = z.object({
 });
 
 const chatRequestSchema = z.object({
-  message: z.string().min(1), //定义message的类型
+  message: z.string(), //定义message的类型
   history: z.array(chatMessageSchema).optional(), //定义history的类型
 });
 
@@ -21,6 +21,12 @@ export async function registerChatRoute(app: FastifyInstance): Promise<void> {
       return reply.status(400).send({ //如果验证失败，返回400错误
         error: 'Invalid request body',
         details: parsed.error.flatten(), //返回错误详情
+      });
+    }
+
+    if (parsed.data.message.trim() === '') {
+      return reply.status(400).send({
+        error: 'Message cannot be empty',
       });
     }
 

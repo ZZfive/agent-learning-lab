@@ -41,3 +41,23 @@ test('returns agent response for valid chat payloads', async () => {
 
   await app.close();
 });
+
+test('returns 400 when message is empty string', async () => {
+  const app = Fastify();
+  await registerChatRoute(app);
+
+  const response = await app.inject({
+    method: 'POST',
+    url: '/chat',
+    payload: {
+      message: '',
+      history: [],
+    },
+  });
+
+  assert.equal(response.statusCode, 400);
+  const body = response.json();
+  assert.equal(body.error, 'Message cannot be empty');
+
+  await app.close();
+});

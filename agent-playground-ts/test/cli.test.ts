@@ -18,3 +18,8 @@ test('buildCliMessage trims surrounding whitespace from joined arguments', () =>
 test('buildCliMessage throws when no message arguments are provided', () => {
   assert.throws(() => buildCliMessage([]), /Please provide a message/);
 });
+
+test('buildCliMessage compresses multiple spaces into a single space', () => {
+  const message = buildCliMessage(['  foo', '   bar   ', 'baz  ']);
+  assert.equal(message, 'foo bar baz'); // 多余空格应被压缩为一个空格
+});
