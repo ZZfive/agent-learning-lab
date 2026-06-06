@@ -37,7 +37,7 @@ export async function registerChatRoute(
 
     const history = parsed.data.sessionId
       ? await historyStore.loadHistory(parsed.data.sessionId)
-      : parsed.data.history ?? [];
+      : parsed.data.history ?? []; //如果sessionId存在，则加载会话的聊天记录；如果请求体中没有sessionId，则用请求体中的history；如果请求体中也没有history，就用空数组
 
     const result = await runAgent(parsed.data.message, history); //调用runAgent函数
 
@@ -45,7 +45,7 @@ export async function registerChatRoute(
       await historyStore.appendHistory(parsed.data.sessionId, [
         { role: 'user', content: parsed.data.message },
         { role: 'assistant', content: result.message },
-      ]);
+      ]); //追加消息到sessionId对应的会话的聊天记录
     }
 
     return reply.send(result); //返回结果
