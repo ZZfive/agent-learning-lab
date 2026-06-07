@@ -74,12 +74,16 @@
 - `/chat` 非法请求返回 400
 - `/chat` 正常请求返回工具结果
 - `/chat` 空 message 返回 400
-- `/chat` 使用 `sessionId` 时会复用已保存的历史
+- `/chat` 使用 `sessionId` 时会复用已保存的历史（含 `sessionId` 回显）
 - `/chat` 非法 `sessionId` 返回 400
 - historyStore 对未知 session 返回空数组
 - historyStore append 后可 load
 - historyStore 多 session 互相隔离
+- historyStore 超过 10 条只保留最后 10 条
 - CLI 参数拼接与空参数报错
+
+待补测试（Week 02 review 识别）：
+- 同时传入 `sessionId` 和 `history` 时，`sessionId` 优先的行为
 
 ### 5. 已完成验证
 - `npm install` 成功
@@ -134,13 +138,15 @@
 - 用 Claude Code 做 review
 
 ### 第二阶段：补最小状态能力
-已完成最小实现：
+已完成最小实现 + Week 02 学习改动：
 - 多会话 history 持久化（按 `sessionId` 保存）
 - 默认本地文件：`agent-playground-ts/data/chat-history.json`
 - 存储结构：`Record<string, ChatMessage[]>`
 - `runAgent` 不直接感知 `sessionId`，仍只接收 `message` 和 `history`
+- 每个 session 最多保留最近 10 条消息（`appendHistory` 末尾 `.slice(-10)`）
+- 有 `sessionId` 时响应中附带 `sessionId` 字段（`AgentResponse` 新增可选字段）
 
-当前 Week 02 的重点应转为：读懂实现、手动联调、补一个小改动，而不是继续扩功能。
+Week 02 已完成，进入 Week 03。
 
 ### 第三阶段：补更像产品的能力
 后续可选：
