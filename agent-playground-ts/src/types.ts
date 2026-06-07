@@ -22,3 +22,27 @@ export interface ChatRequestBody {
   history?: ChatMessage[];
   sessionId?: string;
 }
+
+export interface ToolParameter {
+  type: string;
+  description: string;
+}
+
+export interface ToolResult {
+  output: string;
+  toolName: string;
+  isError?: boolean;
+}
+
+export interface ToolContext {
+  message: string;
+  history: ChatMessage[];
+}
+
+export interface ToolDefinition {
+  name: string;
+  description: string;
+  parameters: Record<string, ToolParameter>;
+  match(context: ToolContext): boolean;
+  run(args: Record<string, string>, context: ToolContext): Promise<ToolResult>;
+}

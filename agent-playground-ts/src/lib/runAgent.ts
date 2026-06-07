@@ -1,67 +1,38 @@
-import { readLocalNote } from '../tools/readLocalNote.js';
-import { summarizeText } from '../tools/summarizeText.js';
 import { countWords } from '../tools/countWords.js';
-import type { AgentMetadata, AgentResponse, ChatMessage } from '../types.js';
-
-function extractQuotedText(message: string): string | null {
-  const match = message.match(/"([^"]+)"/); // 匹配引号包裹的文本，返回捕获组中的文本，如果没有匹配到，则返回 null
-  return match?.[1] ?? null;
-}
-
-function extractNotePath(message: string): string | null {
-  const match = message.match(/note:\s*(\S+)/i);
-  return match?.[1] ?? null;
-}
+import { defaultRegistry } from './toolRegistry.js';
+import type { AgentMetadata, AgentResponse, ChatMessage, ToolDefinition } from '../types.js';
 
 export async function runAgent(
   message: string,
   history: ChatMessage[] = [],
-  withWordCount: boolean = false
+  withWordCount: boolean = false,
+  registry: ToolDefinition[] = defaultRegistry,
 ): Promise<AgentResponse> {
   const toolLogs: string[] = [];
   const normalizedMessage = message.trim();
+  const context = { message: normalizedMessage, history };
 
   function buildMetadata(inputText: string, outputText: string): AgentMetadata | undefined {
     if (!withWordCount) {
       return undefined;
     }
-
     return {
       inputWordCount: countWords(inputText),
       outputWordCount: countWords(outputText),
     };
   }
 
-  if (/summarize/i.test(normalizedMessage)) {
-    const quotedText = extractQuotedText(normalizedMessage) ?? normalizedMessage;
-    const summary = summarizeText(quotedText);
-    toolLogs.push('summarizeText');
-    const outputMessage = `Summary: ${summary}`;
-    return {
-      message: outputMessage,
-      toolLogs,
-      metadata: buildMetadata(quotedText, outputMessage),
-    };
-  }
+  const tool = registry.find(t => t.match(context));
 
-  if (/read note/i.test(normalizedMessage)) {
-    const notePath = extractNotePath(normalizedMessage);
-    if (!notePath) {
-      const errorMessage = 'Please provide a note path like: read note note:/absolute/path.txt';
-      return {
-        message: errorMessage,
-        toolLogs,
-        metadata: buildMetadata(normalizedMessage, errorMessage),
-      };
+  if (tool) {
+    const result = await tool.run({}, context);
+    if (!result.isError) {
+      toolLogs.push(result.toolName);
     }
-
-    const content = await readLocalNote(notePath);
-    toolLogs.push('readLocalNote');
-    const outputMessage = `Note content: ${content}`;
     return {
-      message: outputMessage,
+      message: result.output,
       toolLogs,
-      metadata: buildMetadata(normalizedMessage, outputMessage),
+      metadata: buildMetadata(normalizedMessage, result.output),
     };
   }
 

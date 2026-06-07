@@ -157,6 +157,35 @@ Week 02 已完成，进入 Week 03。
 
 ---
 
+## Week 03 计划：Tool Registry
+
+### 目标
+
+把当前基于正则匹配的手写 tool routing 重构为 tool registry 模式，为 Week 04 接入真实 LLM tool calling 做架构准备。
+
+### 核心改动
+
+- `src/types.ts`：新增 `ToolDefinition`、`ToolResult`、`ToolContext` 类型
+- `src/lib/toolRegistry.ts`：新建，存放 defaultRegistry
+- `src/tools/`：三个工具各自包一层 `ToolDefinition`（原实现不变）
+- `src/lib/runAgent.ts`：改为遍历 registry，不再 import 具体工具
+
+### 设计原则
+
+- `runAgent` 不再知道任何具体工具，只依赖 `registry` 参数
+- 新增工具只需新建 `ToolDefinition` 并加入 registry，不改 `runAgent`
+- `registry` 通过参数传入，保持可测试性（与 `historyStore` 依赖注入模式一致）
+- tool schema（`parameters` 字段）与执行逻辑放在同一个 `ToolDefinition` 对象，为 Week 04 传给 LLM 做准备
+
+### Week 04 方向
+
+接入 Vercel AI SDK（`ai` 包），实现真正的 LLM-driven tool calling：
+- 把 `ToolDefinition` 的 `parameters` 转换为各厂商格式
+- 让模型根据 schema 自主决定调哪个工具
+- 不绑定单一厂商，支持 OpenAI / Anthropic / 其他兼容厂商切换
+
+---
+
 ## 协作建议
 
 当 Claude 在这个目录中工作时：
