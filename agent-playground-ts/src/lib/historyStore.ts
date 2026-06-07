@@ -37,7 +37,7 @@ export function createHistoryStore(filePath = 'data/chat-history.json'): History
 
     async appendHistory(sessionId: string, messages: ChatMessage[]): Promise<void> { //追加一个会话的聊天记录
       const historyFile = await readHistoryFile(filePath);
-      historyFile[sessionId] = [...(historyFile[sessionId] ?? []), ...messages]; //追加消息
+      historyFile[sessionId] = [...(historyFile[sessionId] ?? []), ...messages].slice(-10); //追加消息，并限制长度为10
       await writeHistoryFile(filePath, historyFile); //写入文件
     },
   };

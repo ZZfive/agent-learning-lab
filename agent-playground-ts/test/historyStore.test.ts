@@ -58,3 +58,38 @@ test('keeps histories isolated between sessions', async () => {
     await cleanup();
   }
 });
+
+test('keep at most 10 messages per session', async () => {
+  const { store, cleanup } = await createTempHistoryStore();
+
+  try {
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 1' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 2' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 3' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 4' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 5' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 6' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 7' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 8' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 9' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 10' }]);
+    await store.appendHistory('session-a', [{ role: 'user', content: 'message 11' }]);
+
+    const history = await store.loadHistory('session-a');
+    assert.equal(history.length, 10);
+    assert.deepEqual(history, [
+      { role: 'user', content: 'message 2' },
+      { role: 'user', content: 'message 3' },
+      { role: 'user', content: 'message 4' },
+      { role: 'user', content: 'message 5' },
+      { role: 'user', content: 'message 6' },
+      { role: 'user', content: 'message 7' },
+      { role: 'user', content: 'message 8' },
+      { role: 'user', content: 'message 9' },
+      { role: 'user', content: 'message 10' },
+      { role: 'user', content: 'message 11' },
+    ]);
+  } finally {
+    await cleanup();
+  }
+});
