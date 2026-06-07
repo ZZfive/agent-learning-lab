@@ -105,6 +105,7 @@ test('reuses stored history when sessionId is provided', async () => {
     assert.equal(secondResponse.statusCode, 200);
     const body = secondResponse.json();
     assert.equal(body.message, 'You said: what happened before. Previous assistant reply: You said: hello.');
+    assert.equal(body.sessionId, 'demo');
   } finally {
     await app.close();
     await cleanup();

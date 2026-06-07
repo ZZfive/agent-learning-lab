@@ -14,6 +14,7 @@ export interface AgentResponse {
   message: string;
   toolLogs: string[];
   metadata?: AgentMetadata;
+  sessionId?: string;
 }
 
 export interface ChatRequestBody {

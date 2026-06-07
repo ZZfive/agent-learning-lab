@@ -46,6 +46,7 @@ export async function registerChatRoute(
         { role: 'user', content: parsed.data.message },
         { role: 'assistant', content: result.message },
       ]); //追加消息到sessionId对应的会话的聊天记录
+      return reply.send({ ...result, sessionId: parsed.data.sessionId }); //返回结果，附带sessionId
     }
 
     return reply.send(result); //返回结果
