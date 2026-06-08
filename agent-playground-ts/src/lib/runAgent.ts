@@ -22,10 +22,10 @@ export async function runAgent(
     };
   }
 
-  const tool = registry.find(t => t.match(context));
+  const tool = registry.find(t => t.match(context)); // 遍历registry，找到匹配的工具
 
   if (tool) {
-    const result = await tool.run({}, context);
+    const result = await tool.run({}, context); // 执行工具
     if (!result.isError) {
       toolLogs.push(result.toolName);
     }
