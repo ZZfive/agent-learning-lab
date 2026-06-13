@@ -29,6 +29,14 @@ test('includes previous assistant reply in fallback response context', async () 
   assert.equal(result.metadata, undefined);
 });
 
+test('returns echo output when message starts with "echo back"', async () => {
+  const result = await runAgent('echo back hello world');
+
+  assert.equal(result.toolLogs[0], 'echoBack');
+  assert.equal(result.message, 'Echo: echo back hello world');
+  assert.equal(result.metadata, undefined);
+});
+
 test('returns input and output word count metadata when withWordCount option is true', async () => {
   const result = await runAgent('say something interesting', [], true);
 
