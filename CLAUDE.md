@@ -182,7 +182,20 @@ Week 02 已完成，进入 Week 03。
 接入 Vercel AI SDK（`ai` 包），实现真正的 LLM-driven tool calling：
 - 把 `ToolDefinition` 的 `parameters` 转换为各厂商格式
 - 让模型根据 schema 自主决定调哪个工具
-- 不绑定单一厂商，支持 OpenAI / Anthropic / 其他兼容厂商切换
+- 不绑定单一厂商，支持 OpenAI / Anthropic / OpenRouter / 国内兼容厂商切换
+
+### Week 04 已完成
+
+- `src/lib/toolAdapter.ts`：新建，把 `ToolDefinition[]` 转为 `ai` v6 的 `dynamicTool` 格式
+- `src/lib/runAgentLLM.ts`：新建，基于 `generateText` + tool registry 的 LLM-driven agent
+- `runAgentLLM` 接口：`(message, history?, registry?, model?)` — `model` 参数可注入任意 `LanguageModel`
+- 默认 model：`anthropic('claude-haiku-4-5-20251001')`
+- OpenRouter 用法：`createOpenAI({ baseURL: 'https://openrouter.ai/api/v1', apiKey })('provider/model')`
+- 工具的 `run(args, context)` 已更新为优先使用 LLM 解析的 `args`
+- 集成测试：`test/runAgentLLM.test.ts`，无 API key 时自动 skip
+- 已安装：`ai@6.x`、`@ai-sdk/anthropic`、`@ai-sdk/openai`
+
+**v6 API 注意**：`parameters` 改名为 `inputSchema`；`maxSteps` 改为 `stopWhen: stepCountIs(n)`；动态 schema 用 `dynamicTool`，非 `tool`。
 
 ---
 

@@ -9,7 +9,8 @@ export const echoBackToolDef: ToolDefinition = {
     match({ message }) {
       return /^echo back/i.test(message);
     },
-    async run(_, { message }) {
-      return { output: `Echo: ${message}`, toolName: 'echoBack' };
+    async run({ message: argMessage }, { message }) {
+      const input = argMessage ?? message;
+      return { output: `Echo: ${input}`, toolName: 'echoBack' };
     },
   };

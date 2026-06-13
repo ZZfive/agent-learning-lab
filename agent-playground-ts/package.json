@@ -12,6 +12,9 @@
     "cli": "tsx src/cli.ts"
   },
   "dependencies": {
+    "@ai-sdk/anthropic": "^3.0.84",
+    "@ai-sdk/openai": "^3.0.71",
+    "ai": "^6.0.204",
     "fastify": "^5.3.3",
     "zod": "^3.23.8"
   },

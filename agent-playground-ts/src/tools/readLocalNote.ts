@@ -21,8 +21,8 @@ export const readNoteToolDef: ToolDefinition = {
   match({ message }) {
     return /read note/i.test(message);
   },
-  async run(_, { message }) {
-    const notePath = extractNotePath(message);
+  async run({ path }, { message }) {
+    const notePath = path ?? extractNotePath(message);
     if (!notePath) {
       return {
         output: 'Please provide a note path like: read note note:/absolute/path.txt',

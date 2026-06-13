@@ -28,8 +28,8 @@ export const summarizeToolDef: ToolDefinition = {
   match({ message }) {
     return /summarize/i.test(message);
   },
-  async run(_, { message }) {
-    const input = extractQuotedText(message) ?? message;
+  async run({ text }, { message }) {
+    const input = text ?? extractQuotedText(message) ?? message;
     return { output: `Summary: ${summarizeText(input)}`, toolName: 'summarizeText' };
   },
 };
