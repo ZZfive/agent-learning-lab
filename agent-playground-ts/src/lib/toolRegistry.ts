@@ -7,4 +7,4 @@ export const defaultRegistry: ToolDefinition[] = [
   summarizeToolDef,
   readNoteToolDef,
   echoBackToolDef,
-];
+]; // 默认工具注册表，包含三个工具
